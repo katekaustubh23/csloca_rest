@@ -1,0 +1,104 @@
+------------------------------CCN Changes ------------------------------------------------
+ALTER TABLE `csloca`.`ccn_products_details` 
+ADD COLUMN `wastebasket_size` VARCHAR(100) NULL AFTER `address`,
+ADD COLUMN `requested_action` VARCHAR(45) NULL AFTER `temperature`,
+ADD COLUMN `compaction_count` VARCHAR(45) NULL AFTER `requested_action`,
+ADD COLUMN `efl` VARCHAR(45) NULL AFTER `compaction_count`,
+ADD COLUMN `led_on` VARCHAR(45) NULL AFTER `efl`,
+ADD COLUMN `media_on` VARCHAR(45) NULL AFTER `led_on`,
+ADD COLUMN `tilt_angle` INT(11) NULL DEFAULT 0 AFTER `media_on`,
+ADD COLUMN `is_turned_on` BIT(1) NULL AFTER `tilt_angle`,
+ADD COLUMN `last_gps_detected_date` VARCHAR(45) NULL AFTER `last_collection_date`,
+ADD COLUMN `last_booted_date` VARCHAR(45) NULL AFTER `last_gps_detected_date`,
+ADD COLUMN `registered_date` VARCHAR(45) NULL AFTER `last_booted_date`,
+ADD COLUMN `last_report_date` VARCHAR(45) NULL AFTER `registered_date`,
+CHANGE COLUMN `serial` `serial` VARCHAR(50) NULL ;
+
+ALTER TABLE `csloca`.`ccn_products_details` 
+CHANGE COLUMN `compaction_count` `compaction_count` INT(11) NULL DEFAULT NULL ;
+
+ALTER TABLE `csloca`.`ccn_products_details` 
+CHANGE COLUMN `wastebasket_size` `wastebasket_size` INT(11) NULL DEFAULT NULL ;
+
+ALTER TABLE `csloca`.`ccn_products_details` 
+CHANGE COLUMN `product_type` `product_type` VARCHAR(150) NULL DEFAULT NULL ,
+CHANGE COLUMN `address` `address` VARCHAR(250) NULL DEFAULT NULL ;
+
+ALTER TABLE `csloca`.`ccn_products_details` 
+CHANGE COLUMN `description` `description` VARCHAR(500) NULL DEFAULT NULL ;
+
+-----------------------------------------------------------------------------------------------------
+
+----------------------------------USER TABLE -----WITH DRIVER INFO-----------------------------------
+USER TABLE
+ALTER TABLE `csloca`.`user` 
+ADD COLUMN `driver_info_id` INT(11) NULL DEFAULT NULL AFTER `updated_ts`,
+ADD COLUMN `property_manager_info_id` INT(11) NULL DEFAULT NULL AFTER `driver_info_id`,
+ADD COLUMN `user_status` BIT(1) NULL DEFAULT b'1' AFTER `property_manager_info_id`,
+ADD COLUMN `is_active` BIT(1) NULL DEFAULT b'1' AFTER `user_status`;
+
+
+CREATE TABLE `csloca`.`driver_info` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT(11) NULL,
+  `pr_contact_title` VARCHAR(45) NULL,
+  `pr_contact_name` VARCHAR(45) NULL,
+  `pr_contact_phone` VARCHAR(45) NULL,
+  `pr_contact_email` VARCHAR(45) NULL,
+  `sc_contact_title` VARCHAR(45) NULL,
+  `sc_contact_name` VARCHAR(45) NULL,
+  `sc_contact_phone` VARCHAR(45) NULL,
+  `sc_contact_email` VARCHAR(45) NULL,
+  `company_name` VARCHAR(150) NULL,
+  `company_sign_date` DATETIME NULL DEFAULT CURRENT_TIMESTAMP(),
+  `company_website` VARCHAR(45) NULL,
+  `company_no_of_vehicles` VARCHAR(45) NULL,
+  `company_operating_city` VARCHAR(500) NULL,
+  `dr_location_str_name` VARCHAR(200) NULL,
+  `dr_location_str_number` VARCHAR(45) NULL,
+  `dr_location_city` VARCHAR(45) NULL,
+  `dr_location_state` VARCHAR(100) NULL,
+  `dr_location_country` VARCHAR(45) NULL,
+  `dr_location_zipcode` VARCHAR(45) NULL,
+  `dr_additional_note` LONGTEXT NULL,
+  `dr_rating` VARCHAR(45) NULL,
+  PRIMARY KEY (`id`));
+
+
+---------------------------------------------------------------------------------------
+
+VIEW PArt---------------------------------------------------------------------------------
+VIEW PART
+USE `csloca`;
+CREATE 
+     OR REPLACE ALGORITHM = UNDEFINED 
+    DEFINER = `csloca`@`%` 
+    SQL SECURITY DEFINER
+VIEW `vgetuserandrole` AS
+    SELECT 
+        UUID() AS `id`,
+        `u`.`id` AS `user_id`,
+        `u`.`first_name` AS `first_name`,
+        `u`.`last_name` AS `last_name`,
+        `u`.`email_id` AS `username`,
+        `u`.`password` AS `password`,
+        `u`.`phone` AS `phone`,
+        `u`.`company_name` AS `company_name`,
+        `u`.`otp` AS `otp`,
+        `u`.`token` AS `token`,
+        `u`.`is_deleted` AS `is_user_deleted`,
+        IF(`r`.`is_deleted`, 0, `r`.`id`) AS `role_id`,
+        IF(`r`.`is_deleted`, '', `r`.`name`) AS `role_name`,
+        `r`.`is_deleted` AS `is_role_deleted`,
+        `ur`.`approver` AS `role_approver`,
+        `u`.`driver_info_id` AS `driver_info_id`,
+        `u`.`user_status` AS `user_status`,
+        `u`.`is_active` AS `is_active`
+    FROM
+        ((`user` `u`
+        LEFT JOIN `user_role` `ur` ON (`u`.`id` = `ur`.`user_id`))
+        JOIN `role` `r` ON (`ur`.`role_id` = `r`.`id`))
+    ORDER BY `u`.`id`;
+
+
+
